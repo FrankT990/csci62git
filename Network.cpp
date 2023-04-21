@@ -7,11 +7,11 @@
 #include <unordered_set>
 #include <vector>
 
-Network::Network() { users_ = std::vector<User *>(); }
+Network::Network() { users_ = std::vector<User>(); }
 
-void Network::add_user(User *inp) {
+void Network::add_user(User inp) {
   for (int i = 0; i < users_.size(); i++)
-    if (users_[i] == inp)
+    if (users_[i].id() == inp.id())
       return;
 
   users_.push_back(inp);
@@ -20,37 +20,37 @@ void Network::add_user(User *inp) {
 int Network::add_connection(std::string s1, std::string s2) {
   int indx1 = -1, indx2 = -1;
   for (int i = 0; i < users_.size(); i++) {
-    if (users_[i]->name() == s1)
+    if (users_[i].name() == s1)
       indx1 = i;
-    if (users_[i]->name() == s2)
+    if (users_[i].name() == s2)
       indx2 = i;
   }
   if (indx1 == -1 || indx2 == -1 || indx1 == indx2)
     return -1;
-  users_[indx1]->add_friend(users_[indx2]->id());
-  users_[indx2]->add_friend(users_[indx1]->id());
+  users_[indx1].add_friend(users_[indx2].id());
+  users_[indx2].add_friend(users_[indx1].id());
   return 0;
 }
 
 int Network::remove_connection(std::string s1, std::string s2) {
   int indx1 = -1, indx2 = -1;
   for (int i = 0; i < users_.size(); i++) {
-    if (users_[i]->name() == s1)
+    if (users_[i].name() == s1)
       indx1 = i;
-    if (users_[i]->name() == s2)
+    if (users_[i].name() == s2)
       indx2 = i;
   }
   if (indx1 == -1 || indx2 == -1 || indx1 == indx2)
     return -1;
-  users_[indx1]->delete_friend(users_[indx2]->id());
-  users_[indx2]->delete_friend(users_[indx1]->id());
+  users_[indx1].delete_friend(users_[indx2].id());
+  users_[indx2].delete_friend(users_[indx1].id());
   return 0;
 }
 
 int Network::get_id(std::string name) {
   for (int i = 0; i < users_.size(); i++)
-    if (users_[i]->name() == name)
-      return users_[i]->id();
+    if (users_[i].name() == name)
+      return users_[i].id();
 
   return -1;
 }
@@ -87,8 +87,7 @@ int Network::read_friends(char *fname) {
     }
 
     User u(id, name, year, zip, friends);
-    User *p = &u;
-    users_.push_back(p);
+    users_.push_back(u);
   }
   return 0;
 }
@@ -101,16 +100,16 @@ int Network::write_friends(char *fname) {
   f << num_users();
   f << "\n";
 
-  for (User *u : users_) {
-    f << u->id();
+  for (User &u : users_) {
+    f << std::to_string(u.id());
     f << "\n\t";
-    f << u->name();
+    f << u.name();
     f << "\n\t";
-    f << u->year();
+    f << std::to_string(u.year());
     f << "\n\t";
-    f << u->zip();
+    f << std::to_string(u.zip());
     f << "\n\t";
-    for (std::size_t fren : u->friends()) {
+    for (std::size_t fren : u.friends()) {
       f << fren << " ";
     }
     f << "\n";
@@ -124,27 +123,28 @@ std::string Network::user_info(size_t id) {
   std::string ret_s = "";
   for (size_t i = 0; i < users_.size(); i++) {
     if (i == id) {
-      ret_s += users_[i]->id();
+      ret_s += std::to_string(users_[i].id());
       ret_s += " ";
-      ret_s += users_[i]->name();
+      ret_s += users_[i].name();
       ret_s += " ";
-      ret_s += users_[i]->year();
+      ret_s += std::to_string(users_[i].year());
       ret_s += " ";
-      ret_s += users_[i]->zip();
+      ret_s += std::to_string(users_[i].zip());
       return ret_s;
     }
   }
   return "bad input";
 }
 
-User *Network::get_user(std::size_t id) {
+User Network::get_user(std::size_t id) {
 
-  for (User *&u : users_) {
-    if (u->id() == id) {
+  for (User &u : users_) {
+    if (u.id() == id) {
       return u;
     }
   }
-  return nullptr;
+  User empty;
+  return empty;
 }
 
 bool Network::bfs(int from, int to, std::unordered_map<int, int> &parent,
@@ -156,14 +156,14 @@ bool Network::bfs(int from, int to, std::unordered_map<int, int> &parent,
   set.push_back(from);
   while (!q.empty()) {
 
-    User *temp = get_user(q.front());
+    User temp = get_user(q.front());
     q.pop();
 
-    for (auto f : temp->friends()) {
+    for (auto f : temp.friends()) {
 
       if (visited.count(f) == 0) {
 
-        parent[f] = temp->id();
+        parent[f] = temp.id();
         q.push(f);
         visited.insert(f);
         set.push_back(f);
@@ -212,4 +212,4 @@ std::vector<std::vector<std::size_t>> Network::disjoint_sets() {
   return ret;
 }
 
-std::vector<User *> users_;
+std::vector<User> users_;
