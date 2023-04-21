@@ -24,13 +24,12 @@ void add_user(Network &n) {
 
   int i = std::stoi(tokens[0]);
   size_t id = i;
-  std::string name = tokens[1] + tokens[2];
+  std::string name = tokens[1] + " " + tokens[2];
   int year = std::stoi(tokens[3]);
   int zip = std::stoi(tokens[4]);
   std::vector<std::size_t> friends;
   User u(id, name, year, zip, friends);
-  User *p = &u;
-  n.add_user(p);
+  n.add_user(u);
   std::cout << "User added\n";
 }
 
@@ -48,8 +47,8 @@ void make_friend(Network &n) {
   while (ss >> word) {
     tokens.push_back(word);
   }
-  std::string name1 = tokens[0] + tokens[1];
-  std::string name2 = tokens[2] + tokens[3];
+  std::string name1 = tokens[0] + " " + tokens[1];
+  std::string name2 = tokens[2] + " " + tokens[3];
 
   if (n.add_connection(name1, name2) == 0) {
     std::cout << "Connection creation successful\n";
@@ -72,8 +71,8 @@ void remove_friend(Network &n) {
   while (ss >> word) {
     tokens.push_back(word);
   }
-  std::string name1 = tokens[0] + tokens[1];
-  std::string name2 = tokens[2] + tokens[3];
+  std::string name1 = tokens[0] + " " + tokens[1];
+  std::string name2 = tokens[2] + " " + tokens[3];
   if (n.remove_connection(name1, name2) == 0) {
     std::cout << "Connection removed successfully\n";
   } else {
@@ -93,7 +92,7 @@ void print_users(Network &n) {
 void print_user_friends(Network &n) {
 
   std::cout << "Enter in user to to print friends in format of: " << std::endl
-            << "0 Jason Chen 2001 95053\n";
+            << "Jason Chen\n";
   std::string in;
   std::string in2;
   getline(std::cin >> in, in2);
@@ -106,9 +105,9 @@ void print_user_friends(Network &n) {
   while (ss >> word)
     tokens.push_back(word);
 
-  User *p = n.get_user(n.get_id(tokens[0] + tokens[1]));
+  User p = n.get_user(n.get_id(tokens[0] + " " + tokens[1]));
 
-  for (int i = 0; i < p->friends().size(); i++) {
+  for (int i = 0; i < p.friends().size(); i++) {
     std::cout << n.user_info(i) << "\n";
   }
 }
@@ -139,8 +138,8 @@ void print_shortest_path(Network &n) {
   while (ss >> word)
     tokens.push_back(word);
 
-  std::string name1 = tokens[0] + tokens[1];
-  std::string name2 = tokens[2] + tokens[3];
+  std::string name1 = tokens[0] + " " + tokens[1];
+  std::string name2 = tokens[2] + " " + tokens[3];
 
   int a = n.get_id(name1);
   int b = n.get_id(name2);
@@ -149,9 +148,9 @@ void print_shortest_path(Network &n) {
   v = n.shortest_path(a, b);
 
   for (int i = v.size() - 1; i > 0; i--) {
-    std::cout << n.get_user(i)->name() << " -> ";
+    std::cout << n.get_user(i).name() << " . ";
   }
-  std::cout << n.get_user(0) << "\n";
+  std::cout << n.get_user(0).name() << "\n";
 }
 
 void print_sets(Network &n) {
@@ -162,6 +161,17 @@ void print_sets(Network &n) {
       std::cout << n.user_info(sets[i][j]) << "\n";
     }
   }
+}
+
+void read_file(Network &n) {
+  std::string s;
+  std::cout << "input file name:\n";
+  std::cin >> s;
+  char *c_s = new char[s.length()];
+  for (int i = 0; i < s.length(); i++) {
+    c_s[i] = s[i];
+  }
+  n.read_friends(c_s);
 }
 
 int main() {
@@ -179,7 +189,9 @@ int main() {
                  "6. Write to file\n"
                  "7. Print shortest path to friend of user\n"
                  "8. Print Disjoint Sets\n"
-                 "9. Terminate program\n";
+                 "9. Terminate program\n"
+                "10. Read File\n"
+                "11. Terminate Program\n";
     int input;
     std::cin >> input;
     switch (input) {
@@ -207,9 +219,14 @@ int main() {
     case 8:
       print_sets(net);
       break;
-    //default:
-      //assert(false);
-      //break;
+    case 9:
+      break;
+    case 10:
+      read_file(net);
+      break;
+    default:
+      assert(false);
+      break;
     }
   }
 }
